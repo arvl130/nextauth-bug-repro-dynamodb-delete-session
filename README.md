@@ -32,7 +32,7 @@
 
 This is a project for reproducing an issue where deleting session fails when using the [@auth/dynamodb-adapter](https://authjs.dev/reference/adapter/dynamodb) in Next Auth.
 
-## Getting Started
+## Steps to reproduce the issue
 
 ### 1. Install and setup a local DynamoDB instance.
 
