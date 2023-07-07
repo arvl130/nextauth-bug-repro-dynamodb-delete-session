@@ -1,36 +1,38 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import FacebookProvider from "next-auth/providers/facebook"
+import { Adapter } from "next-auth/adapters"
 import GithubProvider from "next-auth/providers/github"
-import TwitterProvider from "next-auth/providers/twitter"
-import Auth0Provider from "next-auth/providers/auth0"
+import { DynamoDBAdapter } from "@auth/dynamodb-adapter"
+import { DynamoDB } from "@aws-sdk/client-dynamodb"
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb"
 
-// For more information on each option (and a full list of options) go to
-// https://next-auth.js.org/configuration/options
+const dynamodb = new DynamoDB({
+  region: "ap-southeast-1",
+  endpoint: process.env.DYNAMODB_ENDPOINT_URL,
+})
+
+export const dynamodbDocument = DynamoDBDocument.from(dynamodb, {
+  marshallOptions: {
+    convertClassInstanceToMap: true,
+    convertEmptyValues: true,
+    removeUndefinedValues: true,
+  },
+})
+
+const adapter = DynamoDBAdapter(dynamodbDocument, {
+  tableName: "CustomTableName",
+  partitionKey: "CustomPK",
+  sortKey: "CustomSK",
+  indexName: "CustomGSI1",
+  indexPartitionKey: "CustomGSI1PK",
+  indexSortKey: "CustomGSI1SK",
+}) as Adapter
+
 export const authOptions: NextAuthOptions = {
-  // https://next-auth.js.org/configuration/providers/oauth
+  adapter,
   providers: [
-    Auth0Provider({
-      clientId: process.env.AUTH0_ID,
-      clientSecret: process.env.AUTH0_SECRET,
-      issuer: process.env.AUTH0_ISSUER,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_ID,
-      clientSecret: process.env.FACEBOOK_SECRET,
-    }),
     GithubProvider({
       clientId: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET,
-    }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
-    }),
-    TwitterProvider({
-      clientId: process.env.TWITTER_ID,
-      clientSecret: process.env.TWITTER_SECRET,
-      version: "2.0",
     }),
   ],
   callbacks: {
