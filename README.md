@@ -30,80 +30,56 @@
 
 ## Overview
 
-NextAuth.js is a complete open-source authentication solution.
-
-This is an example application that shows how `next-auth` is applied to a basic Next.js app.
-
-The deployed version can be found at [`next-auth-example.vercel.app`](https://next-auth-example.vercel.app)
-
-Go to [next-auth.js.org](https://next-auth.js.org) for more information and documentation.
+This is a project for reproducing an issue where deleting session fails when using the [@auth/dynamodb-adapter](https://authjs.dev/reference/adapter/dynamodb) in Next Auth.
 
 ## Getting Started
 
-### 1. Clone the repository and install dependencies
+### 1. Install and setup a local DynamoDB instance.
 
+You may follow the instructions [here](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) to get DynamoDB running locally.
+
+Once it is running, create a table that following the [schema](https://authjs.dev/reference/adapter/dynamodb#default-schema) provided in the documentation, but with a custom partition key and sort key attribute name.
+
+You may use the Shell script in this repository to create this table:
+
+```sh
+./create-table.sh
 ```
-git clone https://github.com/nextauthjs/next-auth-example.git
-cd next-auth-example
-npm install
+
+### 2. Clone the repository and install dependencies
+
+```sh
+git clone https://github.com/arvl130/nextauth-bug-repro-dynamodb-delete-session
+cd nextauth-bug-repro-dynamodb-delete-session
+pnpm install
 ```
 
-### 2. Configure your local environment
+### 3. Configure your local environment
 
-Copy the .env.local.example file in this directory to .env.local (which will be ignored by Git):
+Copy the .env.local.example file in this directory to .env.local:
 
 ```
 cp .env.local.example .env.local
 ```
 
-Add details for one or more providers (e.g. Google, Twitter, GitHub, Email, etc).
-
-#### Database
-
-A database is needed to persist user accounts and to support email sign in. However, you can still use NextAuth.js for authentication without a database by using OAuth for authentication. If you do not specify a database, [JSON Web Tokens](https://jwt.io/introduction) will be enabled by default.
-
-You **can** skip configuring a database and come back to it later if you want.
-
-For more information about setting up a database, please check out the following links:
-
-- Docs: [next-auth.js.org/adapters/overview](https://next-auth.js.org/adapters/overview)
-
-### 3. Configure Authentication Providers
-
-1. Review and update options in `pages/api/auth/[...nextauth].js` as needed.
-
-2. When setting up OAuth, in the developer admin page for each of your OAuth services, you should configure the callback URL to use a callback path of `{server}/api/auth/callback/{provider}`.
-
-e.g. For Google OAuth you would use: `http://localhost:3000/api/auth/callback/google`
-
-A list of configured providers and their callback URLs is available from the endpoint `/api/auth/providers`. You can find more information at https://next-auth.js.org/configuration/providers/oauth
-
-3. You can also choose to specify an SMTP server for passwordless sign in via email.
+Add details for one or more providers (e.g. GitHub, Google, Twitter, etc).
 
 ### 4. Start the application
 
-To run your site locally, use:
+To run your site, use:
 
 ```
 npm run dev
 ```
 
-To run it in production mode, use:
+### 5. Login with any of the providers configured.
 
+### 6. Sign out and observe the output on the terminal.
+
+A sign out error will be printed about a validation error that occured.
+
+You may run the following command to verify that sessions where not properly deleted:
+
+```sh
+aws dynamodb --endpoint-url http://localhost:8000 delete-table --table-name <table_name>
 ```
-npm run build
-npm run start
-```
-
-### 5. Preparing for Production
-
-Follow the [Deployment documentation](https://authjs.dev/guides/basics/deployment) or deploy the example instantly using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-auth-example)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/nextauthjs/next-auth-example&project-name=next-auth-example&repository-name=next-auth-example)
-
-## Acknowledgements
-
-<a href="https://vercel.com?utm_source=nextauthjs&utm_campaign=oss">
-<img width="170px" src="https://raw.githubusercontent.com/nextauthjs/next-auth/main/docs/static/img/powered-by-vercel.svg" alt="Powered By Vercel" />
-</a>
-<p align="left">Thanks to Vercel sponsoring this project by allowing it to be deployed for free for the entire Auth.js Team</p>
